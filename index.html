@@ -260,8 +260,8 @@
 
         // Muvaffaqiyat ko'rsatish
         function showSuccess(location, action) {
-            const actionText = action === 'arrival' ? 'Keldim' : 'Ketdim';
-            const actionIcon = action === 'arrival' ? '🟢' : '🔴';
+            const actionText = action === 'arrival' ? 'Keldim' : '🟢';
+            const actionIcon = action === 'departure' ? 'Ketdim' : '🔴';
             
             document.getElementById('app').className = 'container success-bg';
             document.getElementById('app').innerHTML = `
@@ -365,3 +365,4 @@
     </script>
 </body>
 </html>
+
