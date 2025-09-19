@@ -314,46 +314,73 @@
                 tg.expand();
             }
             
-            // Action ni aniqlash - muhim qism!
+        // Action ni aniqlash - to'liq qayta yozilgan
+        function determineAction() {
             let action = 'arrival'; // default
             
             try {
-                // URL parametrlarini tekshirish (birinchi ustuvorlik)
+                // 1. URL parametrlaridan tekshirish (eng muhim)
                 const urlParams = new URLSearchParams(window.location.search);
                 const urlAction = urlParams.get('action');
                 
-                if (urlAction) {
-                    action = urlAction;
-                    console.log('Action from URL params:', action);
-                } else {
-                    // Telegram WebApp button_text ni tekshirish
-                    const startParam = tg?.initDataUnsafe?.start_param;
-                    const buttonText = tg?.initDataUnsafe?.button_text || '';
+                if (urlAction === 'departure') {
+                    console.log('Action from URL: departure');
+                    return 'departure';
+                } else if (urlAction === 'arrival') {
+                    console.log('Action from URL: arrival');
+                    return 'arrival';
+                }
+                
+                // 2. URL path dan tekshirish
+                const fullUrl = window.location.href;
+                console.log('Full URL:', fullUrl);
+                
+                if (fullUrl.includes('departure')) {
+                    console.log('Action from URL path: departure');
+                    return 'departure';
+                } else if (fullUrl.includes('arrival')) {
+                    console.log('Action from URL path: arrival');
+                    return 'arrival';
+                }
+                
+                // 3. Hash fragment dan tekshirish
+                const hash = window.location.hash;
+                if (hash.includes('departure')) {
+                    console.log('Action from hash: departure');
+                    return 'departure';
+                } else if (hash.includes('arrival')) {
+                    console.log('Action from hash: arrival');
+                    return 'arrival';
+                }
+                
+                // 4. Telegram WebApp ma'lumotlaridan
+                if (tg && tg.initDataUnsafe) {
+                    const startParam = tg.initDataUnsafe.start_param;
+                    const buttonText = tg.initDataUnsafe.button_text || '';
                     
-                    console.log('Start param:', startParam);
-                    console.log('Button text:', buttonText);
+                    console.log('Telegram start_param:', startParam);
+                    console.log('Telegram button_text:', buttonText);
                     
-                    // URL path ni tekshirish
-                    const currentPath = window.location.pathname + window.location.search;
-                    console.log('Current path:', currentPath);
-                    
-                    if (currentPath.includes('departure') || 
+                    if (startParam === 'departure' || 
                         buttonText.includes('Ketdim') || 
-                        buttonText.includes('❌') ||
-                        startParam === 'departure') {
-                        action = 'departure';
-                    } else if (currentPath.includes('arrival') || 
+                        buttonText.includes('❌')) {
+                        console.log('Action from Telegram data: departure');
+                        return 'departure';
+                    } else if (startParam === 'arrival' || 
                                buttonText.includes('Keldim') || 
-                               buttonText.includes('✅') ||
-                               startParam === 'arrival') {
-                        action = 'arrival';
+                               buttonText.includes('✅')) {
+                        console.log('Action from Telegram data: arrival');
+                        return 'arrival';
                     }
                 }
+                
             } catch (error) {
                 console.error('Error determining action:', error);
             }
-
-            console.log('Final action determined:', action);
+            
+            console.log('Using default action: arrival');
+            return action;
+        }
             
             // UI ni action ga qarab yangilash
             const actionText = action === 'arrival' ? 'Keldim' : 'Ketdim';
