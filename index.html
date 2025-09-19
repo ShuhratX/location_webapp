@@ -2,158 +2,82 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
-  <title>Lokatsiya yuborish</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Lokatsiya Tracker</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      margin: 0;
       font-family: sans-serif;
       background: #f5f5f5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    .container {
+      padding: 40px;
       text-align: center;
-      padding: 2rem;
-      border-radius: 20px;
-      max-width: 350px;
-      width: 90%;
+    }
+    h1 {
+      margin-bottom: 30px;
       color: #333;
     }
-    .loading-bg { background: #fff3cd; }
-    .success-bg { background: #d4edda; }
-    .error-bg { background: #f8d7da; }
-
-    .card { display: flex; flex-direction: column; gap: 1rem; }
-
-    .spinner {
-      width: 40px; height: 40px;
-      border: 4px solid #ccc;
-      border-top: 4px solid #333;
-      border-radius: 50%;
-      margin: 0 auto;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .icon {
-      font-size: 3rem;
-    }
-
-    .title { font-size: 1.3rem; font-weight: bold; }
-    .subtitle { font-size: 1rem; }
-    .description { font-size: 0.9rem; color: #555; }
-
-    .retry-btn {
-      padding: 0.7rem 1rem;
+    button {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 15px auto;
+      padding: 15px;
+      font-size: 18px;
       border: none;
       border-radius: 10px;
-      background: #333;
-      color: white;
-      font-size: 1rem;
+      color: #fff;
       cursor: pointer;
     }
+    #keldim { background: #4CAF50; }
+    #ketdim { background: #F44336; }
   </style>
 </head>
 <body>
-  <div id="app" class="container">
-    <div class="card">
-      <div class="spinner"></div>
-      <h2 class="title">Yuklanmoqda...</h2>
-      <p class="description">Iltimos kuting</p>
-    </div>
-  </div>
-
-  <!-- Telegram WebApp JS -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <h1>Lokatsiya Tracker</h1>
+  <button id="keldim">📍 Keldim</button>
+  <button id="ketdim">🚶‍♂️ Ketdim</button>
 
   <script>
-    async function initWebApp() {
-      const tg = window.Telegram.WebApp;
-      tg.ready();
+    const tg = window.Telegram.WebApp;
 
-      function determineAction() {
-        const hour = new Date().getHours();
-        return hour < 12 ? 'arrival' : 'departure';
+    // localStorage dan token olish yoki yaratish
+    function getOrCreateToken() {
+      let token = localStorage.getItem('employee_token');
+      if (!token) {
+        const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).slice(2);
+        const rand = Math.random().toString(36).slice(2, 8);
+        token = `token_${userId}_${Date.now()}_${rand}`;
+        localStorage.setItem('employee_token', token);
       }
-
-      const action = determineAction();
-      const actionText = action === 'arrival' ? 'Keldim' : 'Ketdim';
-      const actionIcon = action === 'arrival' ? '🟢' : '🔴';
-
-      const app = document.getElementById('app');
-      app.className = 'container loading-bg';
-      app.innerHTML = `
-          <div class="card">
-              <div class="spinner"></div>
-              <h2 class="title">📍 Lokatsiya aniqlanmoqda...</h2>
-              <p class="subtitle">${actionIcon} ${actionText} jarayoni</p>
-              <p class="description">GPS signalini kuting</p>
-          </div>
-      `;
-
-      function getCurrentLocation() {
-        return new Promise((resolve, reject) => {
-          if (!navigator.geolocation) {
-            reject(new Error('Brauzer lokatsiyani qo‘llamaydi'));
-            return;
-          }
-          navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-              accuracy: pos.coords.accuracy
-            }),
-            (err) => {
-              let msg = 'Xatolik';
-              if (err.code === 1) msg = "Ruxsat berilmadi";
-              else if (err.code === 2) msg = "GPS mavjud emas";
-              else if (err.code === 3) msg = "Vaqt tugadi";
-              reject(new Error(msg));
-            },
-            { enableHighAccuracy:true, timeout:15000, maximumAge:30000 }
-          );
-        });
-      }
-
-      try {
-        const loc = await getCurrentLocation();
-
-        tg.sendData(JSON.stringify({
-          action: action,
-          latitude: loc.latitude,
-          longitude: loc.longitude,
-          accuracy: loc.accuracy,
-          timestamp: new Date().toISOString()
-        }));
-
-        app.className = 'container success-bg';
-        app.innerHTML = `
-            <div class="card">
-                <div class="icon">✅</div>
-                <h2 class="title">${actionText} ma'lumoti yuborildi</h2>
-                <p class="subtitle">📍 ${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}</p>
-                <p class="description">Aniqlik: ${Math.round(loc.accuracy)} m</p>
-            </div>
-        `;
-      } catch (e) {
-        app.className = 'container error-bg';
-        app.innerHTML = `
-            <div class="card">
-                <div class="icon">❌</div>
-                <h2 class="title">Xatolik</h2>
-                <p class="description">${e.message}</p>
-                <button class="retry-btn" onclick="initWebApp()">🔁 Qayta urinib ko‘rish</button>
-            </div>
-        `;
-      }
+      return token;
     }
 
-    initWebApp();
+    function sendLocation(action) {
+      if (!navigator.geolocation) {
+        tg.showAlert("📍 Lokatsiya xizmati mavjud emas!");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const data = {
+            action: action,
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            token: getOrCreateToken()
+          };
+          tg.sendData(JSON.stringify(data));
+          tg.close();
+        },
+        (err) => {
+          tg.showAlert("❌ Lokatsiya olinmadi: " + err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }
+
+    document.getElementById("keldim").addEventListener("click", () => sendLocation("Keldim"));
+    document.getElementById("ketdim").addEventListener("click", () => sendLocation("Ketdim"));
   </script>
 </body>
 </html>
