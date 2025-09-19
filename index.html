@@ -155,16 +155,26 @@
 
         // Token localStorage dan olish yoki yaratish
         function getOrCreateToken() {
-            let token = localStorage.getItem('employee_token');
-            if (!token) {
+            try {
+                let token = localStorage.getItem('employee_token');
+                if (!token) {
+                    const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).substr(2, 9);
+                    const timestamp = Date.now();
+                    const randomPart = Math.random().toString(36).substr(2, 8);
+                    token = `token_${userId}_${timestamp}_${randomPart}`;
+                    
+                    localStorage.setItem('employee_token', token);
+                    console.log('New token created and saved:', token);
+                } else {
+                    console.log('Existing token found:', token);
+                }
+                return token;
+            } catch (error) {
+                console.error('Error with localStorage:', error);
+                // localStorage ishlamasa, vaqtinchalik token yaratish
                 const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).substr(2, 9);
-                token = `token_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-                localStorage.setItem('employee_token', token);
-                console.log('New token created:', token);
-            } else {
-                console.log('Existing token found:', token);
+                return `temp_${userId}_${Date.now()}`;
             }
-            return token;
         }
 
         // Lokatsiyani olish funksiyasi
@@ -226,7 +236,8 @@
                     accuracy: location.accuracy,
                     timestamp: new Date().toISOString(),
                     token: token,
-                    user_id: tg?.initDataUnsafe?.user?.id || null
+                    user_id: tg?.initDataUnsafe?.user?.id || null,
+                    is_new_token: !localStorage.getItem('employee_token_saved') // Token yangi yaratilganmi
                 };
 
                 console.log('Sending data to bot:', data);
@@ -234,7 +245,15 @@
                 if (tg && typeof tg.sendData === 'function') {
                     tg.sendData(JSON.stringify(data));
                     console.log('Data sent successfully');
+                    
+                    // Token muvaffaqiyatli yuborilganini belgilash
+                    try {
+                        localStorage.setItem('employee_token_saved', 'true');
+                    } catch (e) {
+                        console.log('Cannot save token status to localStorage');
+                    }
                 } else {
+                    console.error('tg.sendData not available');
                     throw new Error('Telegram WebApp sendData funksiyasi mavjud emas');
                 }
             } catch (error) {
@@ -260,8 +279,8 @@
 
         // Muvaffaqiyat ko'rsatish
         function showSuccess(location, action) {
-            const actionText = action === 'arrival' ? 'Keldim' : '🟢';
-            const actionIcon = action === 'departure' ? 'Ketdim' : '🔴';
+            const actionText = action === 'arrival' ? 'Keldim' : 'Ketdim';
+            const actionIcon = action === 'arrival' ? '🟢' : '🔴';
             
             document.getElementById('app').className = 'container success-bg';
             document.getElementById('app').innerHTML = `
@@ -288,42 +307,63 @@
             }
 
             console.log('Telegram WebApp found, expanding...');
+            console.log('WebApp init data:', tg.initDataUnsafe);
             
             // Telegram WebApp ni kengaytirish
             if (typeof tg.expand === 'function') {
                 tg.expand();
             }
             
-            // Action ni aniqlash
+            // Action ni aniqlash - muhim qism!
             let action = 'arrival'; // default
             
             try {
+                // URL parametrlarini tekshirish (birinchi ustuvorlik)
                 const urlParams = new URLSearchParams(window.location.search);
-                const buttonText = tg?.initDataUnsafe?.button_text || '';
+                const urlAction = urlParams.get('action');
                 
-                console.log('Button text:', buttonText);
-                console.log('URL params:', urlParams.toString());
-                
-                // Tugma textiga qarab action ni aniqlash
-                if (buttonText.includes('Ketdim') || buttonText.includes('❌')) {
-                    action = 'departure';
-                } else if (buttonText.includes('Keldim') || buttonText.includes('✅')) {
-                    action = 'arrival';
-                }
-                
-                // URL parametridan ham tekshirish
-                if (urlParams.get('action')) {
-                    action = urlParams.get('action');
+                if (urlAction) {
+                    action = urlAction;
+                    console.log('Action from URL params:', action);
+                } else {
+                    // Telegram WebApp button_text ni tekshirish
+                    const startParam = tg?.initDataUnsafe?.start_param;
+                    const buttonText = tg?.initDataUnsafe?.button_text || '';
+                    
+                    console.log('Start param:', startParam);
+                    console.log('Button text:', buttonText);
+                    
+                    // URL path ni tekshirish
+                    const currentPath = window.location.pathname + window.location.search;
+                    console.log('Current path:', currentPath);
+                    
+                    if (currentPath.includes('departure') || 
+                        buttonText.includes('Ketdim') || 
+                        buttonText.includes('❌') ||
+                        startParam === 'departure') {
+                        action = 'departure';
+                    } else if (currentPath.includes('arrival') || 
+                               buttonText.includes('Keldim') || 
+                               buttonText.includes('✅') ||
+                               startParam === 'arrival') {
+                        action = 'arrival';
+                    }
                 }
             } catch (error) {
                 console.error('Error determining action:', error);
             }
 
-            console.log('Action determined:', action);
+            console.log('Final action determined:', action);
+            
+            // UI ni action ga qarab yangilash
+            const actionText = action === 'arrival' ? 'Keldim' : 'Ketdim';
+            const actionIcon = action === 'arrival' ? '🟢' : '🔴';
+            
+            document.querySelector('.subtitle').textContent = `${actionIcon} ${actionText} tugmasi bosildi`;
 
             // 1 soniya kutib lokatsiyani olish
             setTimeout(() => {
-                console.log('Starting location request...');
+                console.log('Starting location request for action:', action);
                 
                 getCurrentLocation()
                     .then(location => {
@@ -365,4 +405,3 @@
     </script>
 </body>
 </html>
-
