@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Korxona ish vaqti tizimi</title>
+    <title>Davomat Tizimi</title>
     <style>
         * {
             margin: 0;
@@ -198,7 +198,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏢 Korxona ish vaqti tizimi</h1>
+        <h1>🏢 Korxona davomat tizimi</h1>
         
         <div id="status" class="status loading">
             <span class="loader"></span>
@@ -257,10 +257,11 @@
         function getOrCreateToken() {
             let token = localStorage.getItem('attendanceToken');
             if (!token) {
-                // Yangi token yaratish
+                // Yangi token yaratish - User ID asosida
+                const userId = tg.initDataUnsafe?.user?.id || Date.now();
                 const timestamp = Date.now();
-                const userId = tg.initDataUnsafe?.user?.id || 'unknown';
-                token = btoa(`${userId}_${timestamp}_${Math.random()}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+                const randomStr = Math.random().toString(36).substring(2, 15);
+                token = `${userId}_${timestamp}_${randomStr}`;
                 localStorage.setItem('attendanceToken', token);
             }
             return token;
@@ -392,4 +393,3 @@
     </script>
 </body>
 </html>
-
