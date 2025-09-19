@@ -1,434 +1,156 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Lokatsiya Tracker</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        .container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
-            color: white;
-        }
-        
-        .card {
-            background: rgba(255,255,255,0.15);
-            padding: 30px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            max-width: 350px;
-            width: 100%;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .loading-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .success-bg {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-        }
-        
-        .error-bg {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-        }
-        
-        .spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 25px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
-        
-        .title {
-            margin: 0 0 15px 0;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .subtitle {
-            margin: 0 0 15px 0;
-            opacity: 0.9;
-            font-size: 18px;
-        }
-        
-        .description {
-            margin: 0;
-            font-size: 14px;
-            opacity: 0.7;
-            line-height: 1.4;
-        }
-        
-        .location-info {
-            margin: 10px 0;
-            opacity: 0.9;
-            font-size: 14px;
-        }
-        
-        .accuracy-info {
-            margin: 20px 0;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            font-size: 14px;
-            opacity: 0.8;
-        }
-        
-        .retry-btn {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid rgba(255,255,255,0.5);
-            padding: 15px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            width: 100%;
-            margin-top: 15px;
-        }
-        
-        .retry-btn:hover {
-            background: rgba(255,255,255,0.3);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Lokatsiya Tracker</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+/* === Styling (sizniki) === */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:sans-serif;height:100vh;overflow:hidden}
+.container{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;text-align:center;padding:20px;color:white}
+.card{background:rgba(255,255,255,0.15);padding:30px;border-radius:20px;backdrop-filter:blur(10px);box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:350px;width:100%;border:1px solid rgba(255,255,255,0.2)}
+.loading-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+.success-bg{background:linear-gradient(135deg,#4CAF50 0%,#45a049 100%)}
+.error-bg{background:linear-gradient(135deg,#ff6b6b 0%,#ee5a52 100%)}
+.spinner{width:60px;height:60px;border:4px solid rgba(255,255,255,0.3);border-top:4px solid white;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 25px}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.icon{font-size:60px;margin-bottom:20px}
+.title{margin:0 0 15px;font-size:24px;font-weight:bold}
+.subtitle{margin:0 0 15px;opacity:0.9;font-size:18px}
+.description{margin:0;font-size:14px;opacity:0.7;line-height:1.4}
+.retry-btn{background:rgba(255,255,255,0.2);color:white;border:2px solid rgba(255,255,255,0.5);padding:15px 30px;border-radius:25px;cursor:pointer;font-size:16px;font-weight:bold;transition:all .3s ease;width:100%;margin-top:15px}
+.retry-btn:hover{background:rgba(255,255,255,0.3)}
+</style>
 </head>
 <body>
-    <div id="app" class="container loading-bg">
+<div id="app" class="container loading-bg">
+    <div class="card">
+        <div class="spinner"></div>
+        <h2 class="title">📍 Lokatsiya aniqlanmoqda...</h2>
+        <p class="subtitle">🟢 Botni ishga tushirish</p>
+        <p class="description">Lokatsiya ruxsatini tasdiqlang va<br>GPS signalini kutib turing</p>
+    </div>
+</div>
+
+<script>
+let tg;
+try {
+    tg = window.Telegram.WebApp;
+    tg.ready();
+} catch (e) {
+    console.error('Telegram WebApp yo‘q:', e);
+}
+
+// Token yaratish
+function getOrCreateToken() {
+    try {
+        let token = localStorage.getItem('employee_token');
+        if (!token) {
+            const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).substr(2, 9);
+            const timestamp = Date.now();
+            const randomPart = Math.random().toString(36).substr(2, 8);
+            token = `token_${userId}_${timestamp}_${randomPart}`;
+            localStorage.setItem('employee_token', token);
+        }
+        return token;
+    } catch {
+        const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).substr(2, 9);
+        return `temp_${userId}_${Date.now()}`;
+    }
+}
+
+// Lokatsiyani olish
+function getCurrentLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Brauzer lokatsiyani qo‘llamaydi'));
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            (pos) => resolve({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy
+            }),
+            (err) => {
+                let msg = 'Xatolik';
+                if (err.code === 1) msg = "Ruxsat berilmadi";
+                else if (err.code === 2) msg = "GPS mavjud emas";
+                else if (err.code === 3) msg = "Vaqt tugadi";
+                reject(new Error(msg));
+            },
+            {enableHighAccuracy:true,timeout:15000,maximumAge:30000}
+        );
+    });
+}
+
+// Botga yuborish
+function sendLocationToBot(location) {
+    try {
+        const token = getOrCreateToken();
+        const data = {
+            action: "location",
+            latitude: location.latitude,
+            longitude: location.longitude,
+            accuracy: location.accuracy,
+            timestamp: new Date().toISOString(),
+            token: token,
+            user_id: tg?.initDataUnsafe?.user?.id || null
+        };
+        tg?.sendData(JSON.stringify(data));
+        showSuccess(location);
+    } catch (e) {
+        showError("Ma'lumot yuborishda xato: " + e.message);
+    }
+}
+
+// Xatolik ko‘rsatish
+function showError(message) {
+    document.getElementById('app').className = 'container error-bg';
+    document.getElementById('app').innerHTML = `
+        <div class="card">
+            <div class="icon">❌</div>
+            <h2 class="title">Xatolik!</h2>
+            <p class="description">${message}</p>
+            <button class="retry-btn" onclick="initApp()">🔁 Qayta urinib ko‘rish</button>
+        </div>
+    `;
+}
+
+// Muvaffaqiyatli holat
+function showSuccess(loc) {
+    document.getElementById('app').className = 'container success-bg';
+    document.getElementById('app').innerHTML = `
+        <div class="card">
+            <div class="icon">✅</div>
+            <h2 class="title">Lokatsiya yuborildi</h2>
+            <p class="subtitle">📍 ${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}</p>
+            <p class="description">Aniqlik: ${Math.round(loc.accuracy)} m</p>
+        </div>
+    `;
+}
+
+// Boshlash
+async function initApp() {
+    document.getElementById('app').className = 'container loading-bg';
+    document.getElementById('app').innerHTML = `
         <div class="card">
             <div class="spinner"></div>
             <h2 class="title">📍 Lokatsiya aniqlanmoqda...</h2>
-            <p class="subtitle">🟢 Botni ishga tushirish</p>
-            <p class="description">
-                Lokatsiya ruxsatini tasdiqlang va<br>
-                GPS signalini kutib turing
-            </p>
+            <p class="subtitle">GPS signalini kuting</p>
         </div>
-    </div>
+    `;
+    try {
+        const location = await getCurrentLocation();
+        sendLocationToBot(location);
+    } catch (e) {
+        showError(e.message);
+    }
+}
 
-    <script>
-        console.log('WebApp started');
-        
-        // Telegram WebApp obyekti
-        let tg;
-        
-        try {
-            tg = window.Telegram.WebApp;
-            console.log('Telegram WebApp object:', tg);
-        } catch (error) {
-            console.error('Telegram WebApp not available:', error);
-        }
-
-        // Token localStorage dan olish yoki yaratish
-        function getOrCreateToken() {
-            try {
-                let token = localStorage.getItem('employee_token');
-                if (!token) {
-                    const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).substr(2, 9);
-                    const timestamp = Date.now();
-                    const randomPart = Math.random().toString(36).substr(2, 8);
-                    token = `token_${userId}_${timestamp}_${randomPart}`;
-                    
-                    localStorage.setItem('employee_token', token);
-                    console.log('New token created and saved:', token);
-                } else {
-                    console.log('Existing token found:', token);
-                }
-                return token;
-            } catch (error) {
-                console.error('Error with localStorage:', error);
-                // localStorage ishlamasa, vaqtinchalik token yaratish
-                const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).substr(2, 9);
-                return `temp_${userId}_${Date.now()}`;
-            }
-        }
-
-        // Lokatsiyani olish funksiyasi
-        function getCurrentLocation() {
-            return new Promise((resolve, reject) => {
-                if (!navigator.geolocation) {
-                    reject(new Error('Bu brauzer lokatsiya xizmatini qo\'llab-quvvatlamaydi'));
-                    return;
-                }
-
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 30000
-                };
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        console.log('Location obtained:', position.coords);
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy
-                        });
-                    },
-                    (error) => {
-                        console.error('Geolocation error:', error);
-                        let errorMessage;
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage = "Lokatsiya ruxsati berilmadi. Sozlamalardan ruxsat bering.";
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage = "Lokatsiya xizmati mavjud emas. GPS yoqilganini tekshiring.";
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage = "Lokatsiya olish vaqti tugadi. Qaytadan urinib ko'ring.";
-                                break;
-                            default:
-                                errorMessage = `Lokatsiya xatoligi: ${error.message}`;
-                                break;
-                        }
-                        reject(new Error(errorMessage));
-                    },
-                    options
-                );
-            });
-        }
-
-        // Ma'lumotlarni botga yuborish
-        function sendLocationToBot(action, location) {
-            try {
-                const token = getOrCreateToken();
-                
-                const data = {
-                    action: action,
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    accuracy: location.accuracy,
-                    timestamp: new Date().toISOString(),
-                    token: token,
-                    user_id: tg?.initDataUnsafe?.user?.id || null,
-                    is_new_token: !localStorage.getItem('employee_token_saved') // Token yangi yaratilganmi
-                };
-
-                console.log('Sending data to bot:', data);
-
-                if (tg && typeof tg.sendData === 'function') {
-                    tg.sendData(JSON.stringify(data));
-                    console.log('Data sent successfully');
-                    
-                    // Token muvaffaqiyatli yuborilganini belgilash
-                    try {
-                        localStorage.setItem('employee_token_saved', 'true');
-                    } catch (e) {
-                        console.log('Cannot save token status to localStorage');
-                    }
-                } else {
-                    console.error('tg.sendData not available');
-                    throw new Error('Telegram WebApp sendData funksiyasi mavjud emas');
-                }
-            } catch (error) {
-                console.error('Error sending data to bot:', error);
-                showError(`Ma'lumot yuborishda xatolik: ${error.message}`);
-            }
-        }
-
-        // Xatolik ko'rsatish
-        function showError(message) {
-            document.getElementById('app').className = 'container error-bg';
-            document.getElementById('app').innerHTML = `
-                <div class="card">
-                    <div class="icon">❌</div>
-                    <h2 class="title">Xatolik!</h2>
-                    <p class="subtitle">${message}</p>
-                    <button class="retry-btn" onclick="location.reload()">
-                        🔄 Qaytadan urinish
-                    </button>
-                </div>
-            `;
-        }
-
-        // Muvaffaqiyat ko'rsatish
-        function showSuccess(location, action) {
-            const actionText = action === 'arrival' ? 'Keldim' : 'Ketdim';
-            const actionIcon = action === 'arrival' ? '🟢' : '🔴';
-            
-            document.getElementById('app').className = 'container success-bg';
-            document.getElementById('app').innerHTML = `
-                <div class="card">
-                    <div class="icon">✅</div>
-                    <h2 class="title">${actionIcon} ${actionText} belgilandi!</h2>
-                    <div class="location-info">📍 Lat: ${location.latitude.toFixed(6)}</div>
-                    <div class="location-info">📍 Lon: ${location.longitude.toFixed(6)}</div>
-                    <div class="location-info">📊 Aniqlik: ${Math.round(location.accuracy)} metr</div>
-                    <div class="accuracy-info">Ma'lumot botga yuborildi ✈️</div>
-                </div>
-            `;
-        }
-
-        // Asosiy funksiya
-        function initWebApp() {
-            console.log('Initializing WebApp...');
-            
-            // Telegram WebApp tekshirish
-            if (!tg) {
-                console.error('Telegram WebApp not found');
-                showError('Bu sahifa faqat Telegram bot ichida ishlaydi');
-                return;
-            }
-
-            console.log('Telegram WebApp found, expanding...');
-            console.log('WebApp init data:', tg.initDataUnsafe);
-            
-            // Telegram WebApp ni kengaytirish
-            if (typeof tg.expand === 'function') {
-                tg.expand();
-            }
-            
-        // Action ni aniqlash - to'liq qayta yozilgan
-        function determineAction() {
-            let action = 'arrival'; // default
-            
-            try {
-                // 1. URL parametrlaridan tekshirish (eng muhim)
-                const urlParams = new URLSearchParams(window.location.search);
-                const urlAction = urlParams.get('action');
-                
-                if (urlAction === 'departure') {
-                    console.log('Action from URL: departure');
-                    return 'departure';
-                } else if (urlAction === 'arrival') {
-                    console.log('Action from URL: arrival');
-                    return 'arrival';
-                }
-                
-                // 2. URL path dan tekshirish
-                const fullUrl = window.location.href;
-                console.log('Full URL:', fullUrl);
-                
-                if (fullUrl.includes('departure')) {
-                    console.log('Action from URL path: departure');
-                    return 'departure';
-                } else if (fullUrl.includes('arrival')) {
-                    console.log('Action from URL path: arrival');
-                    return 'arrival';
-                }
-                
-                // 3. Hash fragment dan tekshirish
-                const hash = window.location.hash;
-                if (hash.includes('departure')) {
-                    console.log('Action from hash: departure');
-                    return 'departure';
-                } else if (hash.includes('arrival')) {
-                    console.log('Action from hash: arrival');
-                    return 'arrival';
-                }
-                
-                // 4. Telegram WebApp ma'lumotlaridan
-                if (tg && tg.initDataUnsafe) {
-                    const startParam = tg.initDataUnsafe.start_param;
-                    const buttonText = tg.initDataUnsafe.button_text || '';
-                    
-                    console.log('Telegram start_param:', startParam);
-                    console.log('Telegram button_text:', buttonText);
-                    
-                    if (startParam === 'departure' || 
-                        buttonText.includes('Ketdim') || 
-                        buttonText.includes('❌')) {
-                        console.log('Action from Telegram data: departure');
-                        return 'departure';
-                    } else if (startParam === 'arrival' || 
-                               buttonText.includes('Keldim') || 
-                               buttonText.includes('✅')) {
-                        console.log('Action from Telegram data: arrival');
-                        return 'arrival';
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Error determining action:', error);
-            }
-            
-            console.log('Using default action: arrival');
-            return action;
-        }
-            
-            // UI ni action ga qarab yangilash
-            const actionText = action === 'arrival' ? 'Keldim' : 'Ketdim';
-            const actionIcon = action === 'arrival' ? '🟢' : '🔴';
-            
-            document.querySelector('.subtitle').textContent = `${actionIcon} ${actionText} tugmasi bosildi`;
-
-            // 1 soniya kutib lokatsiyani olish
-            setTimeout(() => {
-                console.log('Starting location request for action:', action);
-                
-                getCurrentLocation()
-                    .then(location => {
-                        console.log('Location obtained successfully:', location);
-                        showSuccess(location, action);
-                        sendLocationToBot(action, location);
-                        
-                        // 3 soniya kutib WebApp ni yopish
-                        setTimeout(() => {
-                            console.log('Closing WebApp...');
-                            if (tg && typeof tg.close === 'function') {
-                                tg.close();
-                            }
-                        }, 3000);
-                    })
-                    .catch(error => {
-                        console.error('Location error:', error);
-                        showError(error.message);
-                    });
-            }, 1000);
-        }
-
-        // Sahifa yuklanganda ishga tushirish
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initWebApp);
-        } else {
-            initWebApp();
-        }
-
-        // Telegram WebApp tayyor bo'lganini bildirish
-        try {
-            if (tg && typeof tg.ready === 'function') {
-                tg.ready();
-                console.log('Telegram WebApp ready called');
-            }
-        } catch (error) {
-            console.error('Error calling tg.ready():', error);
-        }
-    </script>
+window.onload = initApp;
+</script>
 </body>
 </html>
