@@ -1,83 +1,394 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Lokatsiya Tracker</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #f5f5f5;
-      padding: 40px;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 30px;
-      color: #333;
-    }
-    button {
-      display: block;
-      width: 100%;
-      max-width: 300px;
-      margin: 15px auto;
-      padding: 15px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      cursor: pointer;
-    }
-    #keldim { background: #4CAF50; }
-    #ketdim { background: #F44336; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korxona ish vaqti tizimi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 2px solid #bbdefb;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 2px solid #ffcdd2;
+        }
+
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 2px solid #c8e6c9;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        button {
+            padding: 18px 25px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover:before {
+            left: 100%;
+        }
+
+        .btn-keldi {
+            background: linear-gradient(135deg, #4caf50, #45a049);
+            color: white;
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-keldi:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-ketdi {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            box-shadow: 0 8px 20px rgba(244, 67, 54, 0.3);
+        }
+
+        .btn-ketdi:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(244, 67, 54, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .location-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .location-info h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .location-info p {
+            color: #6c757d;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            button {
+                padding: 15px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>Lokatsiya Tracker</h1>
-  <button id="keldim">📍 Keldim</button>
-  <button id="ketdim">🚶‍♂️ Ketdim</button>
+    <div class="container">
+        <h1>🏢 Davomat Tizimi</h1>
+        
+        <div id="status" class="status loading">
+            <span class="loader"></span>
+            Lokatsiya aniqlanmoqda...
+        </div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
+        <div id="locationInfo" class="location-info hidden">
+            <h3>📍 Sizning lokatsiyangiz:</h3>
+            <p id="coordinates"></p>
+            <p id="accuracy"></p>
+        </div>
 
-    // localStorage dan token olish yoki yaratish
-    function getOrCreateToken() {
-      let token = localStorage.getItem('employee_token');
-      if (!token) {
-        const userId = tg?.initDataUnsafe?.user?.id || Math.random().toString(36).slice(2);
-        const rand = Math.random().toString(36).slice(2, 8);
-        token = `token_${userId}_${Date.now()}_${rand}`;
-        localStorage.setItem('employee_token', token);
-      }
-      return token;
-    }
+        <div class="buttons">
+            <button id="keldiBtn" class="btn-keldi" disabled>
+                🟢 Keldim
+            </button>
+            <button id="ketdiBtn" class="btn-ketdi" disabled>
+                🔴 Ketdim
+            </button>
+        </div>
+    </div>
 
-    function sendLocation(action) {
-      if (!navigator.geolocation) {
-        tg.showAlert("📍 Lokatsiya xizmati mavjud emas!");
-        return;
-      }
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Telegram Web App obyektini olish
+        const tg = window.Telegram.WebApp;
+        
+        // Web App ni kengaytirish
+        tg.expand();
+        
+        // Web App tema ranglariga moslashish
+        document.body.style.backgroundColor = tg.backgroundColor || '#667eea';
 
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const data = {
-            action: action,
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            token: getOrCreateToken()
-          };
-          tg.sendData(JSON.stringify(data));
-          tg.close();
-        },
-        (err) => {
-          tg.showAlert("❌ Lokatsiya olinmadi: " + err.message);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    }
+        let userLocation = null;
+        let userToken = null;
 
-    document.getElementById("keldim").addEventListener("click", () => sendLocation("Keldim"));
-    document.getElementById("ketdim").addEventListener("click", () => sendLocation("Ketdim"));
-  </script>
+        // DOM elementlar
+        const statusDiv = document.getElementById('status');
+        const locationInfo = document.getElementById('locationInfo');
+        const coordinatesP = document.getElementById('coordinates');
+        const accuracyP = document.getElementById('accuracy');
+        const keldiBtn = document.getElementById('keldiBtn');
+        const ketdiBtn = document.getElementById('ketdiBtn');
+
+        // Status o'zgartirish funksiyasi
+        function updateStatus(message, type = 'loading') {
+            statusDiv.className = `status ${type}`;
+            if (type === 'loading') {
+                statusDiv.innerHTML = `<span class="loader"></span>${message}`;
+            } else {
+                statusDiv.textContent = message;
+            }
+        }
+
+        // Token yaratish yoki olish
+        function getOrCreateToken() {
+            let token = localStorage.getItem('attendanceToken');
+            if (!token) {
+                // Yangi token yaratish
+                const timestamp = Date.now();
+                const userId = tg.initDataUnsafe?.user?.id || 'unknown';
+                token = btoa(`${userId}_${timestamp}_${Math.random()}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+                localStorage.setItem('attendanceToken', token);
+            }
+            return token;
+        }
+
+        // Lokatsiyani olish
+        function getCurrentLocation() {
+            updateStatus('Lokatsiya aniqlanmoqda...', 'loading');
+            
+            if (!navigator.geolocation) {
+                updateStatus('❌ Sizning brauzeringiz lokatsiyani qo\'llab-quvvatlamaydi!', 'error');
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 30000,
+                maximumAge: 60000
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+
+                    // Lokatsiya ma'lumotlarini ko'rsatish
+                    coordinatesP.textContent = `Lat: ${userLocation.latitude.toFixed(6)}, Lng: ${userLocation.longitude.toFixed(6)}`;
+                    accuracyP.textContent = `Aniqlik: ±${Math.round(userLocation.accuracy)} metr`;
+                    locationInfo.classList.remove('hidden');
+
+                    updateStatus('✅ Lokatsiya aniqlandi! Tugmani tanlang.', 'success');
+                    
+                    // Tugmalarni faollashtirish
+                    keldiBtn.disabled = false;
+                    ketdiBtn.disabled = false;
+                },
+                (error) => {
+                    let errorMessage = '❌ Lokatsiyani aniqlab bo\'lmadi!';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '❌ Lokatsiya ruxsati rad etildi!';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '❌ Lokatsiya ma\'lumoti mavjud emas!';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '❌ Lokatsiyani aniqlash vaqti tugadi!';
+                            break;
+                    }
+                    
+                    updateStatus(errorMessage, 'error');
+                    
+                    // 3 soniya kutib qaytadan urinish
+                    setTimeout(() => {
+                        if (!userLocation) {
+                            getCurrentLocation();
+                        }
+                    }, 3000);
+                },
+                options
+            );
+        }
+
+        // Ma'lumotlarni Telegram botga jo'natish
+        function sendDataToBot(action) {
+            if (!userLocation) {
+                updateStatus('❌ Lokatsiya aniqlanmagan!', 'error');
+                return;
+            }
+
+            const data = {
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                action: action,
+                token: userToken,
+                timestamp: new Date().toISOString()
+            };
+
+            // Tugmalarni vaqtincha o'chirish
+            keldiBtn.disabled = true;
+            ketdiBtn.disabled = true;
+
+            const actionText = action === 'keldim' ? 'Keldim' : 'Ketdim';
+            updateStatus(`${actionText} ma'lumoti jo'natilmoqda...`, 'loading');
+
+            try {
+                // Telegram botga ma'lumot jo'natish
+                tg.sendData(JSON.stringify(data));
+                
+                // Web App ni yopish
+                setTimeout(() => {
+                    tg.close();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error sending data:', error);
+                updateStatus('❌ Ma\'lumot jo\'natishda xatolik!', 'error');
+                
+                // Tugmalarni qayta faollashtirish
+                keldiBtn.disabled = false;
+                ketdiBtn.disabled = false;
+            }
+        }
+
+        // Tugma hodisalari
+        keldiBtn.addEventListener('click', () => sendDataToBot('keldim'));
+        ketdiBtn.addEventListener('click', () => sendDataToBot('ketdim'));
+
+        // Sahifa yuklanishi
+        document.addEventListener('DOMContentLoaded', () => {
+            // Token olish
+            userToken = getOrCreateToken();
+            
+            // Lokatsiyani olish
+            getCurrentLocation();
+            
+            // Telegram Web App ga tayyor ekanini bildirish
+            tg.ready();
+        });
+
+        // Sahifa yopilganda
+        window.addEventListener('beforeunload', () => {
+            tg.close();
+        });
+    </script>
 </body>
 </html>
