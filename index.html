@@ -198,7 +198,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏢 Korxona davomat tizimi</h1>
+        <h1>🏢 Davomat Tizimi</h1>
         
         <div id="status" class="status loading">
             <span class="loader"></span>
@@ -253,17 +253,13 @@
             }
         }
 
-        // Token yaratish yoki olish
-        function getOrCreateToken() {
-            let token = localStorage.getItem('attendanceToken');
-            if (!token) {
-                // Yangi token yaratish - User ID asosida
-                const userId = tg.initDataUnsafe?.user?.id || Date.now();
-                const timestamp = Date.now();
-                const randomStr = Math.random().toString(36).substring(2, 15);
-                token = `${userId}_${timestamp}_${randomStr}`;
-                localStorage.setItem('attendanceToken', token);
-            }
+        // Token yaratish - har safar yangi token
+        function createToken() {
+            const userId = tg.initDataUnsafe?.user?.id || Date.now();
+            const timestamp = Date.now();
+            const randomStr = Math.random().toString(36).substring(2, 15);
+            const token = `${userId}_${timestamp}_${randomStr}`;
+            localStorage.setItem('attendanceToken', token);
             return token;
         }
 
@@ -376,8 +372,8 @@
 
         // Sahifa yuklanishi
         document.addEventListener('DOMContentLoaded', () => {
-            // Token olish
-            userToken = getOrCreateToken();
+            // Har safar yangi token yaratish
+            userToken = createToken();
             
             // Lokatsiyani olish
             getCurrentLocation();
